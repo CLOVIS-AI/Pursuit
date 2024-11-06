@@ -1,15 +1,10 @@
-# Playground: Gradle
+# OpenSavvy Pursuit
 
-<!-- When using the Playground to bootstrap a project, replace this by your project description. -->
-This a template to easily bootstrap your projects.
-
-> This project is part of the OpenSavvy Playground.
-> To learn more, visit [this page](docs/playground/README.md).
+Personal tasks and goals tracker.
 
 ## License
 
-<!-- Mentions under which license you are publishing the project. -->
-<!-- Add the full text to the LICENSE file. -->
+This project is licensed under the [GNU Affero General Public License, version 3](LICENSE.txt).
 
 ## Contributing
 
