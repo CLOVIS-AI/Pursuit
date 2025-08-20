@@ -5,9 +5,18 @@
 # https://github.com/Kotlin/kotlinx.coroutines/releases
 coroutines = "1.10.2"
 
+# https://github.com/Kotlin/kotlinx.serialization/releases
+serialization = "1.9.0"
+
+# https://ktmongo.opensavvy.dev/news
+ktmongo = "0.20.0"
+
 [plugins]
 
 [libraries]
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
+
+ktmongo = { module = "dev.opensavvy.ktmongo:driver-coroutines", version.ref = "ktmongo" }
 
 [bundles]

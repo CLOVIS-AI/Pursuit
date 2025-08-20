@@ -61,6 +61,8 @@ plugins {
 include(
 	"core",
 
+	"integration-mongodb",
+
 	"docs:website",
 	"gradle:templates:template-app",
 	"gradle:templates:template-lib",
