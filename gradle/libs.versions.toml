@@ -2,8 +2,12 @@
 
 [versions]
 
+# https://github.com/Kotlin/kotlinx.coroutines/releases
+coroutines = "1.10.2"
+
 [plugins]
 
 [libraries]
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 
 [bundles]
