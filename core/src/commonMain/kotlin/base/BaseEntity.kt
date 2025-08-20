@@ -14,25 +14,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package opensavvy.pursuit.finance
+package opensavvy.pursuit.base
 
-import opensavvy.pursuit.base.BaseEntity
-import opensavvy.pursuit.base.BaseRef
-import opensavvy.pursuit.base.BaseService
-
-class Transaction(
-	val from: TransactionEnd,
-	val into: TransactionEnd,
-) : BaseEntity {
-
-	class TransactionEnd(
-		val amount: Long,
-		val wallet: Wallet.Ref,
-	)
-
-	interface Service : BaseService<opensavvy.pursuit.finance.Transaction>
-
-	interface Ref : BaseRef<opensavvy.pursuit.finance.Transaction> {
-		override val service: Service
-	}
-}
+interface BaseEntity

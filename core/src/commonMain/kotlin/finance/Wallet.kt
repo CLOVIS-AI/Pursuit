@@ -16,12 +16,18 @@
 
 package opensavvy.pursuit.finance
 
+import opensavvy.pursuit.base.BaseEntity
+import opensavvy.pursuit.base.BaseRef
+import opensavvy.pursuit.base.BaseService
+
 class Wallet(
 	val name: String,
 	val currency: Currency.Ref,
-) {
+) : BaseEntity {
 
-	interface Service
+	interface Service : BaseService<Wallet>
 
-	interface Ref
+	interface Ref : BaseRef<Wallet> {
+		override val service: Service
+	}
 }
