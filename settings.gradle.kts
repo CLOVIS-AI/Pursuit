@@ -59,6 +59,7 @@ plugins {
 }
 
 include(
+	"backend",
 	"core",
 
 	"integration-mongodb",
