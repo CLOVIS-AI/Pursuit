@@ -16,6 +16,22 @@
 
 package opensavvy.pursuit.backend
 
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import opensavvy.pursuit.base.ServiceContainer
+import opensavvy.pursuit.integration.mongodb.PursuitMongoDB
+
 fun main() {
-	println("Hello world!")
+	val mongoClient = MongoClient.create()
+	val database = mongoClient.getDatabase("pursuit-data")
+
+	val services = ServiceContainer(
+		PursuitMongoDB(database),
+	)
+
+	println("Welcome to Pursuit!")
+
+	println("\nLoaded services:")
+	for (service in services.services) {
+		println("- $service")
+	}
 }

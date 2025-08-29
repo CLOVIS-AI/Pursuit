@@ -20,3 +20,23 @@ interface ServiceContainer {
 
 	val services: Sequence<BaseService<*>>
 }
+
+// region Combined
+
+private class CombinedServiceContainer(
+	private val _services: Collection<ServiceContainer>,
+) : ServiceContainer {
+
+	override val services: Sequence<BaseService<*>>
+		get() = _services.asSequence().flatMap { it.services }
+}
+
+/**
+ * Combines multiple [containers] into a single one that contains all of them.
+ */
+fun ServiceContainer(
+	vararg containers: ServiceContainer
+): ServiceContainer =
+	CombinedServiceContainer(containers.asList())
+
+// endregion
