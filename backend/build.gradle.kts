@@ -14,29 +14,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package opensavvy.pursuit.base
-
-interface ServiceContainer {
-
-	val services: Sequence<BaseService<*>>
+plugins {
+	alias(opensavvyConventions.plugins.base)
+	alias(opensavvyConventions.plugins.kotlin.application)
+	alias(libsCommon.plugins.testBalloon)
 }
 
-// region Combined
+kotlin {
+	jvm {
+		binaries {
+			executable {
+				mainClass = "opensavvy.pursuit.backend.PursuitBackendKt"
+			}
+		}
+	}
 
-private class CombinedServiceContainer(
-	private val _services: Collection<ServiceContainer>,
-) : ServiceContainer {
+	sourceSets.jvmMain.dependencies {
+		implementation(projects.core)
+		implementation(projects.integrationMongodb)
+	}
 
-	override val services: Sequence<BaseService<*>>
-		get() = _services.asSequence().flatMap { it.services }
+	sourceSets.commonTest.dependencies {
+		implementation(libsCommon.opensavvy.prepared.testBalloon)
+	}
 }
-
-/**
- * Combines multiple [containers] into a single one that contains all of them.
- */
-fun ServiceContainer(
-	vararg containers: ServiceContainer
-): ServiceContainer =
-	CombinedServiceContainer(containers.asList())
-
-// endregion

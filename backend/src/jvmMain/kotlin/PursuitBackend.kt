@@ -14,29 +14,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package opensavvy.pursuit.base
+package opensavvy.pursuit.backend
 
-interface ServiceContainer {
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import opensavvy.pursuit.base.ServiceContainer
+import opensavvy.pursuit.integration.mongodb.PursuitMongoDB
 
-	val services: Sequence<BaseService<*>>
+fun main() {
+	val mongoClient = MongoClient.create()
+	val database = mongoClient.getDatabase("pursuit-data")
+
+	val services = ServiceContainer(
+		PursuitMongoDB(database),
+	)
+
+	println("Welcome to Pursuit!")
+
+	println("\nLoaded services:")
+	for (service in services.services) {
+		println("- $service")
+	}
 }
-
-// region Combined
-
-private class CombinedServiceContainer(
-	private val _services: Collection<ServiceContainer>,
-) : ServiceContainer {
-
-	override val services: Sequence<BaseService<*>>
-		get() = _services.asSequence().flatMap { it.services }
-}
-
-/**
- * Combines multiple [containers] into a single one that contains all of them.
- */
-fun ServiceContainer(
-	vararg containers: ServiceContainer
-): ServiceContainer =
-	CombinedServiceContainer(containers.asList())
-
-// endregion
