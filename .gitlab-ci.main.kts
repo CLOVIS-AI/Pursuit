@@ -7,6 +7,9 @@ import opensavvy.gitlab.ci.*
 import opensavvy.gitlab.ci.Environment.EnvironmentTier.Development
 import opensavvy.gitlab.ci.plugins.Gradle.Companion.gradlew
 import opensavvy.gitlab.ci.plugins.Gradle.Companion.useGradle
+import opensavvy.gitlab.ci.plugins.Kaniko.Companion.kanikoBuild
+import opensavvy.gitlab.ci.plugins.Kaniko.Companion.kanikoRename
+import opensavvy.gitlab.ci.plugins.Pacman.Companion.pacman
 import opensavvy.gitlab.ci.script.shell
 
 /**
@@ -156,6 +159,47 @@ gitlabCi {
 		}
 
 		interruptible(true)
+	}
+
+	// endregion
+	// region Deployment
+
+	val backendBuild by job {
+		image("archlinux")
+
+		beforeScript {
+			pacman.sync("--noconfirm", "jdk-openjdk", "git")
+		}
+
+		script {
+			shell("./gradlew :backend:jvmDistTar :backend:jvmDistZip")
+		}
+
+		artifacts {
+			include("backend/build/distributions")
+		}
+	}
+
+	val backendImageName = "${Variable.Registry.image}/backend"
+
+	val backendImageBuild by kanikoBuild(
+		imageName = backendImageName,
+		context = "./backend/docker",
+	) {
+		dependsOn(backendBuild, artifacts = true)
+
+		beforeScript {
+			shell("mv backend/build/distributions/backend*.tar backend/docker/pursuit.tar")
+		}
+	}
+
+	if (Value.isDefaultBranch || Value.isTag) {
+		val backendImagePublish by kanikoRename(
+			imageName = backendImageName,
+			newVersion = if (Value.isDefaultBranch) "latest" else Variable.Commit.tag,
+		) {
+			dependsOn(backendImageBuild)
+		}
 	}
 
 	// endregion
