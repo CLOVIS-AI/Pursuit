@@ -9,7 +9,7 @@ coroutines = "1.10.2"
 serialization = "1.9.0"
 
 # https://ktmongo.opensavvy.dev/news
-ktmongo = "0.20.0"
+ktmongo = "0.24.0"
 
 [plugins]
 
