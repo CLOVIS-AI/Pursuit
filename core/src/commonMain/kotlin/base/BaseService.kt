@@ -16,4 +16,13 @@
 
 package opensavvy.pursuit.base
 
+/**
+ * Marker interface for entity services.
+ *
+ * An entity services is the entrypoint to handling an entity.
+ * Typically, an entity service holds the methods to list or create entities, while methods
+ * to act on a specific entity are held by its [BaseRef].
+ *
+ * Methods in this interface should prefer parameters and return types of [BaseRef] instead of [BaseEntity].
+ */
 interface BaseService<E : BaseEntity>

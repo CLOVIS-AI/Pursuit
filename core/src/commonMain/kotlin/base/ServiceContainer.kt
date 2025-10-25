@@ -16,8 +16,14 @@
 
 package opensavvy.pursuit.base
 
+/**
+ * Service locator pattern: a collection of [BaseService].
+ */
 interface ServiceContainer {
 
+	/**
+	 * Returns all services in this container.
+	 */
 	val services: Sequence<BaseService<*>>
 }
 
