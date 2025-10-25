@@ -16,15 +16,14 @@
 
 package opensavvy.pursuit.integration.mongodb.finance
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import opensavvy.ktmongo.bson.types.ObjectId
 import opensavvy.ktmongo.coroutines.MongoCollection
 import opensavvy.pursuit.finance.Currency
-import org.bson.types.ObjectId
 
 @Serializable
 internal data class MongoCurrency(
-	val _id: @Contextual ObjectId,
+	val _id: ObjectId,
 	val name: String,
 	val symbol: String,
 )
