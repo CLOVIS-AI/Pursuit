@@ -14,28 +14,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
 	alias(opensavvyConventions.plugins.base)
-	alias(opensavvyConventions.plugins.kotlin.application)
+	alias(opensavvyConventions.plugins.kotlin.library)
 	alias(libsCommon.plugins.testBalloon)
 }
 
 kotlin {
-	jvm {
-		binaries {
-			executable {
-				mainClass = "opensavvy.pursuit.backend.PursuitBackendKt"
-			}
-		}
-	}
+	jvm()
 
 	sourceSets.jvmMain.dependencies {
-		implementation(projects.core)
-		implementation(projects.inputTelegram)
-		implementation(projects.integrationMongodb)
+		api(projects.core)
 	}
 
 	sourceSets.commonTest.dependencies {
 		implementation(libsCommon.opensavvy.prepared.testBalloon)
+		implementation(libsCommon.kotlin.test)
+	}
+}
+
+library {
+	name.set("Pursuit: Telegram bot UI")
+	description.set("Telegram bot implementation to access Pursuit APIs")
+	homeUrl.set("https://gitlab.com/opensavvy/pursuit")
+
+	license.set {
+		name.set("AGPL 3.0")
+		url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
 	}
 }
