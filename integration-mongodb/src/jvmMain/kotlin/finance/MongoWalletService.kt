@@ -16,17 +16,16 @@
 
 package opensavvy.pursuit.integration.mongodb.finance
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import opensavvy.ktmongo.bson.types.ObjectId
 import opensavvy.ktmongo.coroutines.MongoCollection
 import opensavvy.pursuit.finance.Wallet
-import org.bson.types.ObjectId
 
 @Serializable
 internal data class MongoWallet(
-	val _id: @Contextual ObjectId,
+	val _id: ObjectId,
 	val name: String,
-	val currency: @Contextual ObjectId,
+	val currency: ObjectId,
 )
 
 internal class MongoWalletService(
