@@ -12,10 +12,8 @@ import opensavvy.gitlab.ci.plugins.Kaniko.Companion.kanikoRename
 import opensavvy.gitlab.ci.plugins.Pacman.Companion.pacman
 import opensavvy.gitlab.ci.script.shell
 
-/**
- * The version of images downloaded from https://gitlab.com/opensavvy/automation/containers
- */
-val ciContainers = "0.8.1"
+// https://gitlab.com/opensavvy/automation/containers/-/releases
+val ciContainers = "0.8.2"
 
 /**
  * The URL of the website built by /docs/website.
