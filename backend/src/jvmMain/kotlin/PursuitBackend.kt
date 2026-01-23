@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,10 +17,13 @@
 package opensavvy.pursuit.backend
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import opensavvy.pursuit.base.ServiceContainer
+import opensavvy.pursuit.input.telegram.startTelegramBot
 import opensavvy.pursuit.integration.mongodb.PursuitMongoDB
 
-fun main() {
+fun main(): Unit = runBlocking(Dispatchers.Default) {
 	val mongoClient = MongoClient.create()
 	val database = mongoClient.getDatabase("pursuit-data")
 
@@ -33,5 +36,13 @@ fun main() {
 	println("\nLoaded services:")
 	for (service in services.services) {
 		println("- $service")
+	}
+
+	val telegramBotToken: String? = System.getenv("telegram_bot_token")
+	if (telegramBotToken != null) {
+		println("\nStarting the Telegram bot…")
+		startTelegramBot(telegramBotToken, services)
+	} else {
+		println("\nNo Telegram bot token provided, ignoring the bot. To register the bot, create the environment variable 'telegram_bot_token'.'")
 	}
 }
