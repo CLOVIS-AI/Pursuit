@@ -16,4 +16,15 @@
 
 package opensavvy.pursuit.base
 
+/**
+ * Interface marker for entities.
+ *
+ * An entity is a class that stores pure business data.
+ *
+ * An entity doesn't provide methods to act on that data.
+ * These methods are available on the [BaseRef].
+ * As a result, the same entity can be reused between multiple integrations.
+ *
+ * An entity typically doesn't know its own ID, as different integrations may use different IDs.
+ */
 interface BaseEntity

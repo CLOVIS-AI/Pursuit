@@ -16,9 +16,23 @@
 
 package opensavvy.pursuit.base
 
+/**
+ * The interface of all [BaseEntity] references.
+ *
+ * Each entity typically declares its own interface inheriting this one, adding methods to describe actions on that
+ * specific entity.
+ */
 interface BaseRef<E : BaseEntity> {
 
+	/**
+	 * The [BaseService] responsible for handling the referenced entity.
+	 */
 	val service: BaseService<E>
 
+	/**
+	 * Attempts to read the referenced entity.
+	 *
+	 * Returns `null` if the entity doesn't exist.
+	 */
 	suspend fun read(): E?
 }
