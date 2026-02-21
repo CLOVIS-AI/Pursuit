@@ -17,7 +17,15 @@
 package opensavvy.pursuit.tests
 
 import opensavvy.prepared.runner.testballoon.preparedSuite
+import opensavvy.prepared.suite.prepared
+import opensavvy.pursuit.tests.users.FakeUserService
+import opensavvy.pursuit.tests.users.verifyUserService
 
 val Fakes by preparedSuite {
-	test("Empty test") {}
+
+	val users by prepared {
+		FakeUserService()
+	}
+
+	verifyUserService(users)
 }
