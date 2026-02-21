@@ -12,7 +12,7 @@ serialization = "1.10.0"
 ktmongo = "0.26.2"
 
 # https://gitlab.com/opensavvy/telegram-bot/-/releases
-telegram = "0.1.0"
+telegram = "0.1.2"
 
 [plugins]
 
