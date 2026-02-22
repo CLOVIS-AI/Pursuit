@@ -19,6 +19,10 @@ package opensavvy.pursuit.integration.mongodb
 import kotlinx.serialization.Serializable
 import opensavvy.prepared.runner.testballoon.preparedSuite
 import opensavvy.prepared.suite.config.CoroutineTimeout
+import opensavvy.prepared.suite.prepared
+import opensavvy.pursuit.integration.mongodb.users.MongoUser
+import opensavvy.pursuit.integration.mongodb.users.MongoUserService
+import opensavvy.pursuit.tests.users.verifyUserService
 import kotlin.time.Duration.Companion.minutes
 
 @Serializable
@@ -37,4 +41,12 @@ val MongoDB by preparedSuite {
 	}
 
 	// endregion
+
+	val usersCollection by testCollection<MongoUser>("users")
+
+	val users by prepared {
+		MongoUserService(usersCollection())
+	}
+
+	verifyUserService(users)
 }
