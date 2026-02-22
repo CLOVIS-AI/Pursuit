@@ -16,8 +16,25 @@
 
 package opensavvy.pursuit.integration.mongodb
 
+import kotlinx.serialization.Serializable
 import opensavvy.prepared.runner.testballoon.preparedSuite
+import opensavvy.prepared.suite.config.CoroutineTimeout
+import kotlin.time.Duration.Companion.minutes
+
+@Serializable
+data class Dummy(val name: String)
 
 val MongoDB by preparedSuite {
-	test("test") {}
+
+	// region Dummy collection to verify DB connection
+
+	val dummyCollection by testCollection<Dummy>("dummy")
+
+	test("Connect to the database", CoroutineTimeout(1.minutes)) {
+		dummyCollection().insertOne(Dummy("bob"))
+
+		check(dummyCollection().find().toList() == listOf(Dummy("bob")))
+	}
+
+	// endregion
 }
