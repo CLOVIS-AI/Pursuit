@@ -18,6 +18,6 @@ package opensavvy.pursuit.integration.mongodb
 
 import opensavvy.prepared.runner.testballoon.preparedSuite
 
-val Test by preparedSuite {
+val MongoDB by preparedSuite {
 	test("test") {}
 }
