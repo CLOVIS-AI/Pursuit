@@ -61,6 +61,10 @@ kotlin {
 	sourceSets.commonTest.dependencies {
 		implementation(libsCommon.bundles.testBalloon)
 	}
+
+	compilerOptions {
+		freeCompilerArgs.add("-Xcontext-parameters")
+	}
 }
 
 library {
