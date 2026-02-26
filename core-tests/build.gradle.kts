@@ -77,3 +77,8 @@ library {
 		url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
 	}
 }
+
+powerAssert {
+	functions = listOf("kotlin.check")
+	includedSourceSets = listOf("commonMain", "jvmMain", "jsMain", "iosArm64Main", "iosSimulatorArm64Main", "iosX64Main", "linuxArm64Main", "linuxX64Main", "macosArm64Main", "macosX64Main", "mingwX64Main", "tvosArm64Main", "tvosSimulatorArm64Main", "tvosX64Main", "wasmJsMain", "watchosArm32Main", "watchosArm64Main", "watchosSimulatorArm64Main", "watchosX64Main")
+}
