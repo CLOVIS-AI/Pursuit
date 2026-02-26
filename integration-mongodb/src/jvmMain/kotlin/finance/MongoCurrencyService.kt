@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,6 +16,7 @@
 
 package opensavvy.pursuit.integration.mongodb.finance
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import opensavvy.ktmongo.bson.types.ObjectId
 import opensavvy.ktmongo.coroutines.MongoCollection
@@ -32,20 +33,29 @@ internal class MongoCurrencyService(
 	private val collection: MongoCollection<MongoCurrency>,
 ) : Currency.Service {
 
+	override suspend fun create(name: String, symbol: String, description: String?): Currency.Ref {
+		TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
+	}
+
+	override fun search(text: String?): Flow<Currency.Ref> {
+		TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
+	}
+
 	inner class MongoCurrencyRef(
 		val id: ObjectId,
 	) : Currency.Ref {
 		override val service get() = this@MongoCurrencyService
+
+		override suspend fun edit(name: String?, symbol: String?, description: String?) {
+			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
+		}
 
 		override suspend fun read(): Currency? {
 			val currency = collection.findOne {
 				MongoCurrency::_id eq id
 			} ?: return null
 
-			return Currency(
-				name = currency.name,
-				symbol = currency.symbol,
-			)
+			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
 		}
 
 		// region Identity
