@@ -6,13 +6,13 @@
 coroutines = "1.10.2"
 
 # https://github.com/Kotlin/kotlinx.serialization/releases
-serialization = "1.9.0"
+serialization = "1.10.0"
 
 # https://ktmongo.opensavvy.dev/news
-ktmongo = "0.24.0"
+ktmongo = "0.26.2"
 
 # https://gitlab.com/opensavvy/telegram-bot/-/releases
-telegram = "0.1.0"
+telegram = "0.1.2"
 
 [plugins]
 
