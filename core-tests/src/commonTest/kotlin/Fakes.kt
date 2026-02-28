@@ -18,6 +18,8 @@ package opensavvy.pursuit.tests
 
 import opensavvy.prepared.runner.testballoon.preparedSuite
 import opensavvy.prepared.suite.prepared
+import opensavvy.pursuit.tests.finance.FakeCurrencyService
+import opensavvy.pursuit.tests.finance.verifyCurrencyService
 import opensavvy.pursuit.tests.users.FakeUserService
 import opensavvy.pursuit.tests.users.verifyUserService
 
@@ -27,5 +29,10 @@ val Fakes by preparedSuite {
 		FakeUserService()
 	}
 
+	val currencies by prepared {
+		FakeCurrencyService()
+	}
+
 	verifyUserService(users)
+	verifyCurrencyService(users, currencies)
 }
