@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -33,6 +33,7 @@ kotlin {
 		implementation(projects.core)
 		implementation(projects.inputTelegram)
 		implementation(projects.integrationMongodb)
+		runtimeOnly(libs.slf4j.simple)
 	}
 
 	sourceSets.commonTest.dependencies {

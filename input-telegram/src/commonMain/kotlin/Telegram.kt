@@ -17,6 +17,9 @@
 package opensavvy.pursuit.input.telegram
 
 import opensavvy.pursuit.base.ServiceContainer
+import opensavvy.pursuit.base.service
+import opensavvy.pursuit.users.User
+import opensavvy.pursuit.users.currentUser
 import opensavvy.telegram.sdk.TelegramBot
 
 suspend fun startTelegramBot(
@@ -28,9 +31,38 @@ suspend fun startTelegramBot(
 	val me = bot.getMe()
 	println("Telegram bot started with username: ${me.username} • $me")
 
+	val users = services.service<User.Service>().first()
+
 	bot.poll {
-		command("/start") {
-			bot.sendMessage(it.chat.id, "Welcome to the Pursuit bot! Stay tuned for more features.")
+		command("/start", description = "Start the bot and log in") {
+			val from = it.from ?: return@command
+			val username = from.username
+
+			if (username == null) {
+				bot.sendMessage(it.chat.id, "Welcome to the Pursuit bot! \n\nTo continue using this bot, please configure a username in your Telegram settings.")
+				return@command
+			}
+
+			val user = try {
+				users.logInWithTelegram(
+					telegramUserId = from.id.value,
+					username = username,
+					fullName = listOfNotNull(from.firstName, from.lastName).joinToString(" "),
+				)
+			} catch (e: Exception) {
+				System.err.println("Error logging in user $username: $e")
+				bot.sendMessage(it.chat.id, "Could not log you in. Please try again later.")
+				return@command
+			}.read() ?: return@command
+
+			bot.sendMessage(it.chat.id, "Welcome, ${user.fullName}!\n\nYou are logged in to Pursuit. Pursuit is a new personal and financial tracker, to help you pursue your life goals. \n\nStay tuned for updates!")
+		}
+
+		users.authCommand("/hello", description = "Test whether you are authenticated") {
+			bot.sendMessage(
+				it.chat.id,
+				"Hello, ${currentUser().read()?.fullName}!"
+			)
 		}
 
 		command("/services") {
