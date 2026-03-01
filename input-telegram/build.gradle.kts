@@ -27,6 +27,10 @@ plugins {
 kotlin {
 	jvm()
 
+	sourceSets.all {
+		languageSettings.enableLanguageFeature("ContextParameters")
+	}
+
 	sourceSets.jvmMain.dependencies {
 		api(projects.core)
 		implementation(libs.telegram)

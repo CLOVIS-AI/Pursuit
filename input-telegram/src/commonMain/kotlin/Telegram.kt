@@ -19,6 +19,7 @@ package opensavvy.pursuit.input.telegram
 import opensavvy.pursuit.base.ServiceContainer
 import opensavvy.pursuit.base.service
 import opensavvy.pursuit.users.User
+import opensavvy.pursuit.users.currentUser
 import opensavvy.telegram.sdk.TelegramBot
 
 suspend fun startTelegramBot(
@@ -55,6 +56,13 @@ suspend fun startTelegramBot(
 			}.read() ?: return@command
 
 			bot.sendMessage(it.chat.id, "Welcome, ${user.fullName}!\n\nYou are logged in to Pursuit. Pursuit is a new personal and financial tracker, to help you pursue your life goals. \n\nStay tuned for updates!")
+		}
+
+		users.authCommand("/hello", description = "Test whether you are authenticated") {
+			bot.sendMessage(
+				it.chat.id,
+				"Hello, ${currentUser().read()?.fullName}!"
+			)
 		}
 
 		command("/services") {
