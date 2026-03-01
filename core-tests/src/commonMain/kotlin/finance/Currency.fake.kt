@@ -35,12 +35,13 @@ class FakeCurrencyService : Currency.Service {
 	override suspend fun create(
 		name: String,
 		symbol: String,
+		numberToBasic: Int,
 		description: String?,
 	): Currency.Ref = lock.withLock("create($name, $symbol, $description)") {
 		val user = currentUser()
 
 		val newId = currenciesById.size.toLong()
-		val newCurrency = Currency(name, symbol, description)
+		val newCurrency = Currency(name, symbol, numberToBasic, description)
 
 		currenciesById[newId] = newCurrency
 		creatorsByCurrencyId[newId] = user
@@ -105,6 +106,7 @@ class FakeCurrencyService : Currency.Service {
 		override suspend fun edit(
 			name: String?,
 			symbol: String?,
+			numberToBasic: Int?,
 			description: String?,
 		) = service.lock.withLock("edit($id, $name, $symbol, $description)") {
 			val user = currentUser()
@@ -116,6 +118,7 @@ class FakeCurrencyService : Currency.Service {
 				name = name ?: current.name,
 				symbol = symbol ?: current.symbol,
 				description = description ?: current.description,
+				numberToBasic = numberToBasic ?: current.numberToBasic,
 			)
 
 			service.currenciesById[id] = new

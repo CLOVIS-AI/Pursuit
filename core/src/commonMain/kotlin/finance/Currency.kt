@@ -42,6 +42,15 @@ data class Currency(
 	val symbol: String,
 
 	/**
+	 * How many units of the smallest decomposition of this currency makes one of this currency.
+	 *
+	 * For example, the Euro can be decomposed into 100 cents, so the number to basic is 100.
+	 *
+	 * The Malagasy ariary can be decomposed into 5 Iraimbilanja, so the number to basic is 5.
+	 */
+	val numberToBasic: Int,
+
+	/**
 	 * A human-readable multi-line description of this currency.
 	 */
 	val description: String?,
@@ -61,6 +70,7 @@ data class Currency(
 		suspend fun create(
 			name: String,
 			symbol: String,
+			numberToBasic: Int,
 			description: String? = null,
 		): Ref
 
@@ -101,6 +111,7 @@ data class Currency(
 		suspend fun edit(
 			name: String? = null,
 			symbol: String? = null,
+			numberToBasic: Int? = null,
 			description: String? = null,
 		)
 	}

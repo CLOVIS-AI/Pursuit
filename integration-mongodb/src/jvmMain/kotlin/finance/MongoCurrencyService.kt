@@ -33,13 +33,20 @@ internal data class MongoCurrency(
 	val symbol: String,
 	val description: String?,
 	val owner: ObjectId,
+	/** numberToBasic */
+	val nToB: Int,
 )
 
 internal class MongoCurrencyService(
 	private val collection: MongoCollection<MongoCurrency>,
 ) : Currency.Service {
 
-	override suspend fun create(name: String, symbol: String, description: String?): Currency.Ref {
+	override suspend fun create(
+		name: String,
+		symbol: String,
+		numberToBasic: Int,
+		description: String?,
+	): Currency.Ref {
 		val user = currentMongoUser()
 
 		val newId = collection.context.newId()
@@ -51,6 +58,7 @@ internal class MongoCurrencyService(
 				symbol = symbol,
 				description = description,
 				owner = user.id,
+				nToB = numberToBasic,
 			)
 		)
 
@@ -81,7 +89,12 @@ internal class MongoCurrencyService(
 	) : Currency.Ref {
 		override val service get() = this@MongoCurrencyService
 
-		override suspend fun edit(name: String?, symbol: String?, description: String?) {
+		override suspend fun edit(
+			name: String?,
+			symbol: String?,
+			numberToBasic: Int?,
+			description: String?,
+		) {
 			val user = currentMongoUser()
 
 			// TODO after https://gitlab.com/opensavvy/ktmongo/-/merge_requests/197:
@@ -106,6 +119,9 @@ internal class MongoCurrencyService(
 
 					if (description != null)
 						MongoCurrency::description set description
+
+					if (numberToBasic != null)
+						MongoCurrency::nToB set numberToBasic
 				}
 			)
 		}
@@ -122,6 +138,7 @@ internal class MongoCurrencyService(
 				name = currency.name,
 				symbol = currency.symbol,
 				description = currency.description,
+				numberToBasic = currency.nToB,
 			)
 		}
 
