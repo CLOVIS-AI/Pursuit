@@ -21,6 +21,7 @@ import opensavvy.prepared.suite.Prepared
 import opensavvy.prepared.suite.SuiteDsl
 import opensavvy.prepared.suite.assertions.checkThrows
 import opensavvy.pursuit.finance.Currency
+import opensavvy.pursuit.finance.ensureStandardCurrencies
 import opensavvy.pursuit.tests.users.executeAs
 import opensavvy.pursuit.tests.users.testUser
 import opensavvy.pursuit.users.User
@@ -139,6 +140,10 @@ fun SuiteDsl.verifyCurrencyService(
 			}
 
 			check(c1 == c2)
+		}
+
+		test("Create the standard currencies") {
+			currencies().ensureStandardCurrencies()
 		}
 
 		test("Users can see the public currencies") {

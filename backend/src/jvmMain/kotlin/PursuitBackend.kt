@@ -20,6 +20,9 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import opensavvy.pursuit.base.ServiceContainer
+import opensavvy.pursuit.base.service
+import opensavvy.pursuit.finance.Currency
+import opensavvy.pursuit.finance.ensureStandardCurrencies
 import opensavvy.pursuit.input.telegram.startTelegramBot
 import opensavvy.pursuit.integration.mongodb.PursuitMongoDB
 
@@ -36,6 +39,11 @@ fun main(): Unit = runBlocking(Dispatchers.Default) {
 	println("\nLoaded services:")
 	for (service in services.services) {
 		println("- $service")
+	}
+
+	println("\nInitializing currencies…")
+	for (currencyService in services.service<Currency.Service>()) {
+		currencyService.ensureStandardCurrencies()
 	}
 
 	val telegramBotToken: String? = System.getenv("telegram_bot_token")
