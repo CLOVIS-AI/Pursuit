@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,6 +21,8 @@ import opensavvy.ktmongo.coroutines.asKtMongo
 import opensavvy.pursuit.base.BaseService
 import opensavvy.pursuit.base.ServiceContainer
 import opensavvy.pursuit.integration.mongodb.finance.*
+import opensavvy.pursuit.integration.mongodb.users.MongoUser
+import opensavvy.pursuit.integration.mongodb.users.MongoUserService
 
 class PursuitMongoDB(
 	database: MongoDatabase,
@@ -40,9 +42,14 @@ class PursuitMongoDB(
 		wallets = wallets,
 	)
 
+	private val users = MongoUserService(
+		collection = database.getCollection<MongoUser>("users").asKtMongo(),
+	)
+
 	override val services: Sequence<BaseService<*>> = sequenceOf(
 		currencies,
 		wallets,
 		transactions,
+		users,
 	)
 }

@@ -9,7 +9,7 @@ coroutines = "1.10.2"
 serialization = "1.10.0"
 
 # https://ktmongo.opensavvy.dev/news
-ktmongo = "0.26.2"
+ktmongo = "0.26.3"
 
 # https://gitlab.com/opensavvy/telegram-bot/-/releases
 telegram = "0.1.2"
