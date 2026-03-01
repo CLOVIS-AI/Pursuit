@@ -17,16 +17,22 @@
 package opensavvy.pursuit.integration.mongodb.finance
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import opensavvy.ktmongo.bson.types.ObjectId
 import opensavvy.ktmongo.coroutines.MongoCollection
 import opensavvy.pursuit.finance.Currency
+import opensavvy.pursuit.integration.mongodb.users.currentMongoUser
 
 @Serializable
 internal data class MongoCurrency(
 	val _id: ObjectId,
 	val name: String,
 	val symbol: String,
+	val description: String?,
+	val owner: ObjectId,
 )
 
 internal class MongoCurrencyService(
@@ -34,11 +40,40 @@ internal class MongoCurrencyService(
 ) : Currency.Service {
 
 	override suspend fun create(name: String, symbol: String, description: String?): Currency.Ref {
-		TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
+		val user = currentMongoUser()
+
+		val newId = collection.context.newId()
+
+		collection.insertOne(
+			MongoCurrency(
+				_id = newId,
+				name = name,
+				symbol = symbol,
+				description = description,
+				owner = user.id,
+			)
+		)
+
+		return MongoCurrencyRef(newId)
 	}
 
-	override fun search(text: String?): Flow<Currency.Ref> {
-		TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
+	override fun search(text: String?): Flow<Currency.Ref> = flow {
+		val user = currentMongoUser()
+
+		val search = collection.find {
+			// TODO in the future: add a projection on just the ID, or add a cache
+
+			MongoCurrency::owner eq user.id
+
+			if (text != null) {
+				val regex = ".*$text.*"
+				MongoCurrency::name.regex(regex)
+				MongoCurrency::symbol.regex(regex)
+				MongoCurrency::description.regex(regex)
+			}
+		}
+
+		emitAll(search.asFlow().map { MongoCurrencyRef(it._id) })
 	}
 
 	inner class MongoCurrencyRef(
@@ -47,15 +82,47 @@ internal class MongoCurrencyService(
 		override val service get() = this@MongoCurrencyService
 
 		override suspend fun edit(name: String?, symbol: String?, description: String?) {
-			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
+			val user = currentMongoUser()
+
+			// TODO after https://gitlab.com/opensavvy/ktmongo/-/merge_requests/197:
+			//    merge the 'find' and the 'updateOne' into a single atomic operation
+			val exists = collection.findOne {
+				MongoCurrency::_id eq id
+				MongoCurrency::owner eq user.id
+			}
+			checkNotNull(exists) { "Cannot modify a currency $id that does not exist, or that does not belong to the logged-in user" }
+
+			collection.updateOne(
+				filter = {
+					MongoCurrency::_id eq id
+					MongoCurrency::owner eq user.id
+				},
+				update = {
+					if (name != null)
+						MongoCurrency::name set name
+
+					if (symbol != null)
+						MongoCurrency::symbol set symbol
+
+					if (description != null)
+						MongoCurrency::description set description
+				}
+			)
 		}
 
 		override suspend fun read(): Currency? {
+			val user = currentMongoUser()
+
 			val currency = collection.findOne {
 				MongoCurrency::_id eq id
+				MongoCurrency::owner eq user.id
 			} ?: return null
 
-			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/11")
+			return Currency(
+				name = currency.name,
+				symbol = currency.symbol,
+				description = currency.description,
+			)
 		}
 
 		// region Identity
