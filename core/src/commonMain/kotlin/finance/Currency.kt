@@ -75,6 +75,28 @@ data class Currency(
 		): Ref
 
 		/**
+		 * Ensures that the public currency [name] exists.
+		 *
+		 * Public currencies are visible by all users but are modifiable by no one.
+		 *
+		 * This function creates the public currency if it doesn't exist yet and updates it if it already does
+		 * but has different fields.
+		 *
+		 * The detection of the update is based on the [name].
+		 *
+		 * ### Authorization
+		 *
+		 * **This method should never be called by users.** It is a system function only.
+		 * It should be called on start-up with a set of default currencies.
+		 */
+		suspend fun ensurePublic(
+			name: String,
+			symbol: String,
+			numberToBasic: Int,
+			description: String? = null,
+		): Ref
+
+		/**
 		 * Searches for currencies.
 		 *
 		 * ### Authorization
@@ -97,6 +119,13 @@ data class Currency(
 
 	interface Ref : BaseRef<Currency> {
 		override val service: Service
+
+		/**
+		 * Whether the current user can edit this currency.
+		 *
+		 * `true` means the current user is allowed to edit the currency.
+		 */
+		val canEdit: Boolean
 
 		/**
 		 * Modifies information about an existing currency.

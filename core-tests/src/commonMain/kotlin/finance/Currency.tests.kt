@@ -80,6 +80,7 @@ fun SuiteDsl.verifyCurrencyService(
 
 				currency.edit(name = "DOLLAR")
 
+				check(currency.canEdit)
 				check(currency.read() == Currency("DOLLAR", "€", description = null, numberToBasic = 100))
 			}
 		}
@@ -111,6 +112,59 @@ fun SuiteDsl.verifyCurrencyService(
 				currency.edit(numberToBasic = 5)
 
 				check(currency.read() == Currency("EURO", "€", description = "Foo", numberToBasic = 5))
+			}
+		}
+	}
+
+	suite("Public currencies") {
+		test("Create a public currency") {
+			val currency = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(currency.read() == Currency("USD", "$", description = "US Dollar", numberToBasic = 100))
+			}
+		}
+
+		test("Update a public currency") {
+			val c1 = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(c1.read() == Currency("USD", "$", description = "US Dollar", numberToBasic = 100))
+			}
+
+			val c2 = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar, modified", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(c1.read() == Currency("USD", "$", description = "US Dollar, modified", numberToBasic = 100))
+			}
+
+			check(c1 == c2)
+		}
+
+		test("Users can see the public currencies") {
+			val public = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				val private = currencies().create(name = "EURO", symbol = "€", description = "Euro", numberToBasic = 100)
+
+				check(private.read()?.symbol == "€")
+				check(public.read()?.symbol == "$")
+
+				check(private in currencies().search().toList())
+				check(public in currencies().search().toList())
+			}
+		}
+
+		test("Users cannot edit the public currencies") {
+			val public = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(!public.canEdit)
+				check(public in currencies().search().toList())
+
+				checkThrows<IllegalStateException> {
+					public.edit(name = "Other")
+				}
 			}
 		}
 	}

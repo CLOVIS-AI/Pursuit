@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import opensavvy.prepared.suite.assertions.matches
 import opensavvy.pursuit.finance.Currency
 import opensavvy.pursuit.users.User
 import opensavvy.pursuit.users.currentUser
@@ -30,6 +31,7 @@ class FakeCurrencyService : Currency.Service {
 
 	private val currenciesById = mutableMapOf<Long, Currency>()
 	private val creatorsByCurrencyId = mutableMapOf<Long, User.Ref>()
+	private val publicCurrenciesById = mutableMapOf<Long, Currency>()
 	private val lock = Mutex()
 
 	override suspend fun create(
@@ -46,7 +48,21 @@ class FakeCurrencyService : Currency.Service {
 		currenciesById[newId] = newCurrency
 		creatorsByCurrencyId[newId] = user
 
-		FakeCurrencyRef(this, newId)
+		FakeCurrencyRef(this, newId, isPublic = false)
+	}
+
+	override suspend fun ensurePublic(
+		name: String,
+		symbol: String,
+		numberToBasic: Int,
+		description: String?,
+	): Currency.Ref = lock.withLock("ensurePublic($name, $symbol, $description)") {
+		val newId = currenciesById.size.toLong()
+		val newCurrency = Currency(name, symbol, numberToBasic, description)
+
+		publicCurrenciesById[newId] = newCurrency
+
+		FakeCurrencyRef(this, newId, isPublic = true)
 	}
 
 	override fun search(text: String?): Flow<Currency.Ref> = flow {
@@ -54,36 +70,50 @@ class FakeCurrencyService : Currency.Service {
 		val user = currentUser()
 
 		// Query all elements BEFORE emitting in the flow to ensure there is no concurrency with other readers
-		val results = lock.withLock("search($text)") {
+		val private = lock.withLock("search.private($text)") {
 			if (text == null)
 				currenciesById.keys
 					.filter { id -> creatorsByCurrencyId[id] == user }
-					.map { id -> FakeCurrencyRef(service, id) }
+					.map { id -> FakeCurrencyRef(service, id, isPublic = false) }
 			else {
 				val pattern = Regex(".*$text.*", RegexOption.IGNORE_CASE)
 				currenciesById
 					.filter { (id, _) -> creatorsByCurrencyId[id] == user }
 					.filter { (_, currency) -> pattern matches currency.name || pattern matches currency.symbol }
-					.map { (id, _) -> FakeCurrencyRef(service, id) }
+					.map { (id, _) -> FakeCurrencyRef(service, id, isPublic = false) }
 			}
 		}
 
-		emitAll(results.asFlow())
+		val public = lock.withLock("search.public($text)") {
+			publicCurrenciesById
+				.filter { (_, currency) -> text == null || currency.name matches ".*$text.*" || currency.symbol matches ".*$text.*" }
+				.map { (id, _) -> FakeCurrencyRef(service, id, isPublic = true) }
+		}
+
+		emitAll(private.asFlow())
+		emitAll(public.asFlow())
 	}
 
 	private data class FakeCurrencyRef(
 		override val service: FakeCurrencyService,
 		val id: Long,
+		val isPublic: Boolean,
 	) : Currency.Ref {
 
 		override suspend fun read(): Currency? = service.lock.withLock("read($id)") {
 			val user = currentUser()
+
+			if (isPublic)
+				return@withLock service.publicCurrenciesById[id]
 
 			if (service.creatorsByCurrencyId[id] != user)
 				return@withLock null
 
 			service.currenciesById[id]
 		}
+
+		override val canEdit: Boolean
+			get() = !isPublic
 
 		override fun toString() = "FakeCurrencyRef($id)"
 
