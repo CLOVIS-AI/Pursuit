@@ -58,7 +58,7 @@ fun User.Ref.asCoroutineContext(): CoroutineContext =
  *
  * @see currentUser
  */
-suspend fun executeAs(user: User.Ref, block: suspend () -> Unit) =
+suspend fun <T> executeAs(user: User.Ref, block: suspend () -> T): T =
 	withContext(user.asCoroutineContext()) { block() }
 
 /**

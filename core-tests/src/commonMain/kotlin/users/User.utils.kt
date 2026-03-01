@@ -53,5 +53,6 @@ fun Prepared<User.Service>.testUser(
 	this@testUser().testUser(name, fullName)
 }
 
-suspend fun TestDsl.executeAs(user: Prepared<User.Ref>, block: suspend () -> Unit) =
+@IgnorableReturnValue
+suspend fun <T> TestDsl.executeAs(user: Prepared<User.Ref>, block: suspend () -> T): T =
 	executeAs(user(), block)
