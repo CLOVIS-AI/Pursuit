@@ -77,7 +77,9 @@ class FakeCurrencyService : Currency.Service {
 
 		override suspend fun read(): Currency? = service.lock.withLock("read($id)") {
 			val user = currentUser()
-			check(service.creatorsByCurrencyId[id] == user)
+
+			if (service.creatorsByCurrencyId[id] != user)
+				return@withLock null
 
 			service.currenciesById[id]
 		}

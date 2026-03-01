@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,7 +32,7 @@ interface BaseRef<E : BaseEntity> {
 	/**
 	 * Attempts to read the referenced entity.
 	 *
-	 * Returns `null` if the entity doesn't exist.
+	 * Returns `null` if the entity doesn't exist or if the current user isn't allowed to see it.
 	 */
 	suspend fun read(): E?
 }
