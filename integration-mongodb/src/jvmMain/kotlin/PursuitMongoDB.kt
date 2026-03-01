@@ -39,7 +39,6 @@ class PursuitMongoDB(
 
 	private val transactions = MongoTransactionService(
 		collection = database.getCollection<MongoTransaction>("transactions").asKtMongo(),
-		wallets = wallets,
 	)
 
 	private val users = MongoUserService(
