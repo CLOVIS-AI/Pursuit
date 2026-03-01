@@ -67,7 +67,7 @@ fun SuiteDsl.verifyCurrencyService(
 			executeAs(userB) {
 				check(currencies().search().toList() == emptyList<Currency.Ref>())
 
-				checkThrows<IllegalStateException> { currency.read() }
+				check(currency.read() == null)
 				checkThrows<IllegalStateException> { currency.edit(name = "DOLLAR") }
 			}
 		}

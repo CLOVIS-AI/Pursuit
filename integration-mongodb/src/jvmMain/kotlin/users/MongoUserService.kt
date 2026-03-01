@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
 import opensavvy.ktmongo.bson.types.ObjectId
 import opensavvy.ktmongo.coroutines.MongoCollection
 import opensavvy.pursuit.users.User
+import opensavvy.pursuit.users.currentUser
 
 @Serializable
 internal data class MongoUser(
@@ -89,4 +90,10 @@ internal class MongoUserService(
 
 		// endregion
 	}
+}
+
+internal suspend fun currentMongoUser(): MongoUserService.MongoUserRef {
+	val user = currentUser()
+	check(user is MongoUserService.MongoUserRef) { "Cannot create a MongoDB currency with a non-MongoDB user: $user" }
+	return user
 }
