@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -43,10 +43,7 @@ internal class MongoWalletService(
 				MongoWallet::_id eq id
 			} ?: return null
 
-			return Wallet(
-				name = wallet.name,
-				currency = currencies.MongoCurrencyRef(wallet.currency),
-			)
+			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/issues/22")
 		}
 
 		// region Identity

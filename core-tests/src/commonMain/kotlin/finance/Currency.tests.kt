@@ -21,6 +21,7 @@ import opensavvy.prepared.suite.Prepared
 import opensavvy.prepared.suite.SuiteDsl
 import opensavvy.prepared.suite.assertions.checkThrows
 import opensavvy.pursuit.finance.Currency
+import opensavvy.pursuit.finance.ensureStandardCurrencies
 import opensavvy.pursuit.tests.users.executeAs
 import opensavvy.pursuit.tests.users.testUser
 import opensavvy.pursuit.users.User
@@ -36,7 +37,7 @@ fun SuiteDsl.verifyCurrencyService(
 	suite("Create") {
 		test("Cannot create a currency without being authenticated") {
 			checkThrows<IllegalStateException> {
-				currencies().create(name = "EURO", symbol = "€")
+				currencies().create(name = "EURO", symbol = "€", numberToBasic = 100)
 			}
 		}
 
@@ -48,7 +49,7 @@ fun SuiteDsl.verifyCurrencyService(
 
 		test("A user can create a currency") {
 			executeAs(userA) {
-				val currency = checkNotNull(currencies().create(name = "EURO", symbol = "€").read())
+				val currency = checkNotNull(currencies().create(name = "EURO", symbol = "€", numberToBasic = 100).read())
 
 				check(currency.name == "EURO")
 				check(currency.symbol == "€")
@@ -59,8 +60,8 @@ fun SuiteDsl.verifyCurrencyService(
 		test("A user doesn't have access to currencies created by another user") {
 			var currency: Currency.Ref? = null
 			executeAs(userA) {
-				currency = currencies().create(name = "EURO", symbol = "€")
-				check(currency.read() == Currency("EURO", "€", description = null))
+				currency = currencies().create(name = "EURO", symbol = "€", numberToBasic = 100)
+				check(currency.read() == Currency("EURO", "€", description = null, numberToBasic = 100))
 			}
 			checkNotNull(currency)
 
@@ -76,31 +77,99 @@ fun SuiteDsl.verifyCurrencyService(
 	suite("Edit") {
 		test("A user can rename a currency") {
 			executeAs(userA) {
-				val currency = currencies().create(name = "EURO", symbol = "€")
+				val currency = currencies().create(name = "EURO", symbol = "€", numberToBasic = 100)
 
 				currency.edit(name = "DOLLAR")
 
-				check(currency.read() == Currency("DOLLAR", "€", description = null))
+				check(currency.canEdit)
+				check(currency.read() == Currency("DOLLAR", "€", description = null, numberToBasic = 100))
 			}
 		}
 
 		test("A user can change the symbol of a currency") {
 			executeAs(userA) {
-				val currency = currencies().create(name = "EURO", symbol = "€")
+				val currency = currencies().create(name = "EURO", symbol = "€", numberToBasic = 100)
 
 				currency.edit(symbol = "$")
 
-				check(currency.read() == Currency("EURO", "$", description = null))
+				check(currency.read() == Currency("EURO", "$", description = null, numberToBasic = 100))
 			}
 		}
 
 		test("A user can change the description of a currency") {
 			executeAs(userA) {
-				val currency = currencies().create(name = "EURO", symbol = "€", description = "Foo")
+				val currency = currencies().create(name = "EURO", symbol = "€", description = "Foo", numberToBasic = 100)
 
 				currency.edit(description = "Bar")
 
-				check(currency.read() == Currency("EURO", "€", description = "Bar"))
+				check(currency.read() == Currency("EURO", "€", description = "Bar", numberToBasic = 100))
+			}
+		}
+
+		test("A user can change the number to basic of a currency") {
+			executeAs(userA) {
+				val currency = currencies().create(name = "EURO", symbol = "€", description = "Foo", numberToBasic = 100)
+
+				currency.edit(numberToBasic = 5)
+
+				check(currency.read() == Currency("EURO", "€", description = "Foo", numberToBasic = 5))
+			}
+		}
+	}
+
+	suite("Public currencies") {
+		test("Create a public currency") {
+			val currency = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(currency.read() == Currency("USD", "$", description = "US Dollar", numberToBasic = 100))
+			}
+		}
+
+		test("Update a public currency") {
+			val c1 = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(c1.read() == Currency("USD", "$", description = "US Dollar", numberToBasic = 100))
+			}
+
+			val c2 = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar, modified", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(c1.read() == Currency("USD", "$", description = "US Dollar, modified", numberToBasic = 100))
+			}
+
+			check(c1 == c2)
+		}
+
+		test("Create the standard currencies") {
+			currencies().ensureStandardCurrencies()
+		}
+
+		test("Users can see the public currencies") {
+			val public = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				val private = currencies().create(name = "EURO", symbol = "€", description = "Euro", numberToBasic = 100)
+
+				check(private.read()?.symbol == "€")
+				check(public.read()?.symbol == "$")
+
+				check(private in currencies().search().toList())
+				check(public in currencies().search().toList())
+			}
+		}
+
+		test("Users cannot edit the public currencies") {
+			val public = currencies().ensurePublic(name = "USD", symbol = "$", description = "US Dollar", numberToBasic = 100)
+
+			executeAs(userA) {
+				check(!public.canEdit)
+				check(public in currencies().search().toList())
+
+				checkThrows<IllegalStateException> {
+					public.edit(name = "Other")
+				}
 			}
 		}
 	}

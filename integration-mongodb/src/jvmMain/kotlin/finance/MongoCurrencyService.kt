@@ -32,14 +32,22 @@ internal data class MongoCurrency(
 	val name: String,
 	val symbol: String,
 	val description: String?,
-	val owner: ObjectId,
+	/** The user who created this currency. `null` if it is public/was created by the system. */
+	val owner: ObjectId?,
+	/** numberToBasic */
+	val nToB: Int,
 )
 
 internal class MongoCurrencyService(
 	private val collection: MongoCollection<MongoCurrency>,
 ) : Currency.Service {
 
-	override suspend fun create(name: String, symbol: String, description: String?): Currency.Ref {
+	override suspend fun create(
+		name: String,
+		symbol: String,
+		numberToBasic: Int,
+		description: String?,
+	): Currency.Ref {
 		val user = currentMongoUser()
 
 		val newId = collection.context.newId()
@@ -51,10 +59,39 @@ internal class MongoCurrencyService(
 				symbol = symbol,
 				description = description,
 				owner = user.id,
+				nToB = numberToBasic,
 			)
 		)
 
-		return MongoCurrencyRef(newId)
+		return MongoCurrencyRef(newId, canEdit = true)
+	}
+
+	override suspend fun ensurePublic(
+		name: String,
+		symbol: String,
+		numberToBasic: Int,
+		description: String?,
+	): Currency.Ref {
+		collection.upsertOne(
+			filter = {
+				MongoCurrency::name eq name
+				MongoCurrency::owner eq null
+			},
+			update = {
+				MongoCurrency::symbol set symbol
+				MongoCurrency::nToB set numberToBasic
+				MongoCurrency::description set description
+			}
+		)
+
+		// TODO after https://gitlab.com/opensavvy/ktmongo/-/merge_requests/197:
+		//    merge the 'find' and the 'updateOne' into a single atomic operation
+		val created = collection.findOne {
+			MongoCurrency::name eq name
+			MongoCurrency::owner eq null
+		} ?: error("Could not find the public currency we just created: '$name' ($symbol)")
+
+		return MongoCurrencyRef(created._id, canEdit = false)
 	}
 
 	override fun search(text: String?): Flow<Currency.Ref> = flow {
@@ -63,7 +100,10 @@ internal class MongoCurrencyService(
 		val search = collection.find {
 			// TODO in the future: add a projection on just the ID, or add a cache
 
-			MongoCurrency::owner eq user.id
+			or {
+				MongoCurrency::owner eq user.id
+				MongoCurrency::owner eq null
+			}
 
 			if (text != null) {
 				val regex = ".*$text.*"
@@ -73,15 +113,21 @@ internal class MongoCurrencyService(
 			}
 		}
 
-		emitAll(search.asFlow().map { MongoCurrencyRef(it._id) })
+		emitAll(search.asFlow().map { MongoCurrencyRef(it._id, canEdit = it.owner == null || it.owner == user.id) })
 	}
 
 	inner class MongoCurrencyRef(
 		val id: ObjectId,
+		override val canEdit: Boolean,
 	) : Currency.Ref {
 		override val service get() = this@MongoCurrencyService
 
-		override suspend fun edit(name: String?, symbol: String?, description: String?) {
+		override suspend fun edit(
+			name: String?,
+			symbol: String?,
+			numberToBasic: Int?,
+			description: String?,
+		) {
 			val user = currentMongoUser()
 
 			// TODO after https://gitlab.com/opensavvy/ktmongo/-/merge_requests/197:
@@ -106,6 +152,9 @@ internal class MongoCurrencyService(
 
 					if (description != null)
 						MongoCurrency::description set description
+
+					if (numberToBasic != null)
+						MongoCurrency::nToB set numberToBasic
 				}
 			)
 		}
@@ -115,13 +164,17 @@ internal class MongoCurrencyService(
 
 			val currency = collection.findOne {
 				MongoCurrency::_id eq id
-				MongoCurrency::owner eq user.id
+				or {
+					MongoCurrency::owner eq user.id
+					MongoCurrency::owner eq null
+				}
 			} ?: return null
 
 			return Currency(
 				name = currency.name,
 				symbol = currency.symbol,
 				description = currency.description,
+				numberToBasic = currency.nToB,
 			)
 		}
 
