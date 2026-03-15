@@ -18,6 +18,7 @@ package opensavvy.pursuit.input.telegram
 
 import opensavvy.pursuit.base.ServiceContainer
 import opensavvy.pursuit.base.service
+import opensavvy.pursuit.finance.Currency
 import opensavvy.pursuit.users.User
 import opensavvy.pursuit.users.currentUser
 import opensavvy.telegram.sdk.TelegramBot
@@ -32,6 +33,7 @@ suspend fun startTelegramBot(
 	println("Telegram bot started with username: ${me.username} • $me")
 
 	val users = services.service<User.Service>().first()
+	val currencies = services.service<Currency.Service>().first()
 
 	bot.poll {
 		command("/start", description = "Start the bot and log in") {
@@ -64,6 +66,8 @@ suspend fun startTelegramBot(
 				"Hello, ${currentUser().read()?.fullName}!"
 			)
 		}
+
+		currencyCommands(bot, users, currencies)
 
 		command("/services") {
 			bot.sendMessage(it.chat.id, "Registered services:\n\n • ${services.services.joinToString("\n • ")}")
