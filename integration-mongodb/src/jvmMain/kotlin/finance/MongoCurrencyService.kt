@@ -97,7 +97,11 @@ internal class MongoCurrencyService(
 	override fun search(text: String?): Flow<Currency.Ref> = flow {
 		val user = currentMongoUser()
 
-		val search = collection.find {
+		val search = collection.find({
+			sort {
+				ascending(MongoCurrency::symbol)
+			}
+		}) {
 			// TODO in the future: add a projection on just the ID, or add a cache
 
 			or {
