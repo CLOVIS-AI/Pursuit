@@ -112,9 +112,9 @@ internal class MongoCurrencyService(
 			if (text != null) {
 				val regex = ".*$text.*"
 				or {
-					MongoCurrency::name.regex(regex)
-					MongoCurrency::symbol.regex(regex)
-					MongoCurrency::description.regex(regex)
+					MongoCurrency::name.regex(regex, caseInsensitive = true)
+					MongoCurrency::symbol.regex(regex, caseInsensitive = true)
+					MongoCurrency::description.regex(regex, caseInsensitive = true)
 				}
 			}
 		}
