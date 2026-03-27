@@ -2,6 +2,6 @@ name: Pursuit
 
 services:
   mongo:
-    image: "mongo:8.0.13"
+    image: "mongo:7.0.31"
     ports:
       - "27017:27017"
