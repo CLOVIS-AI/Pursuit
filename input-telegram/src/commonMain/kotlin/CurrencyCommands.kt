@@ -43,7 +43,7 @@ fun BotRouter.Builder.currencyCommands(
 
 		bot.sendMessage(
 			chat = msg.chat.id,
-			replyParameters = ReplyParameters(msg.id, ReplyParameters.ChatIdentifier.Id(msg.chat.id)),
+			reply = ReplyParameters(msg.id, ReplyParameters.ChatIdentifier.Id(msg.chat.id)),
 			text = response.toString(),
 		)
 	}

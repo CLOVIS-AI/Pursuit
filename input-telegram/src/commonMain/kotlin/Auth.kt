@@ -28,12 +28,12 @@ context(builder: BotRouter.Builder)
 fun User.Service.authCommand(
 	text: String,
 	description: String,
-	handler: suspend (Message) -> Unit,
+	handler: suspend BotRouter.HandlerContext.(Message) -> Unit,
 ) = builder.command(text, description) { message ->
 	val from = message.from ?: return@command
 	val username = from.username ?: return@command
 
-	val user = this.logInWithTelegram(
+	val user = this@authCommand.logInWithTelegram(
 		telegramUserId = from.id.value,
 		username = username,
 		fullName = listOfNotNull(from.firstName, from.lastName).joinToString(" "),
