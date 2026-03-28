@@ -64,7 +64,7 @@ suspend fun startTelegramBot(
 			it.reply("Hello, ${currentUser().read()?.fullName}!")
 		}
 
-		currencyCommands(bot, users, currencies)
+		currencyCommands(users, currencies)
 
 		command("/services") {
 			bot.sendMessage(it.chat.id, "Registered services:\n\n • ${services.services.joinToString("\n • ")}")

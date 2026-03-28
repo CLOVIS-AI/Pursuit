@@ -16,14 +16,15 @@
 
 package opensavvy.pursuit.input.telegram
 
+import kotlinx.coroutines.flow.toList
 import opensavvy.pursuit.finance.Currency
 import opensavvy.pursuit.users.User
-import opensavvy.telegram.entity.ReplyParameters
+import opensavvy.telegram.entity.InlineKeyboardButton
+import opensavvy.telegram.entity.InlineKeyboardMarkup
 import opensavvy.telegram.sdk.BotRouter
-import opensavvy.telegram.sdk.TelegramBot
+import kotlin.time.Duration.Companion.minutes
 
 fun BotRouter.Builder.currencyCommands(
-	bot: TelegramBot,
 	users: User.Service,
 	currencies: Currency.Service,
 ) {
@@ -32,19 +33,84 @@ fun BotRouter.Builder.currencyCommands(
 		val text = (msg.text ?: "").substringAfter("/list_currencies").trim()
 			.takeIf { it.isNotBlank() }
 
-		val response = StringBuilder()
+		val pageSize = 30
+		var page = 0
 
-		response.appendLine("Available currencies:")
-		currencies.search(text = text).collect { ref ->
-			val currency = ref.read() ?: return@collect
+		suspend fun generate(): Pair<String, InlineKeyboardMarkup> {
+			val response = StringBuilder()
 
-			response.appendLine(" • ${currency.symbol} - ${currency.name}")
+			val results = currencies.search(text = text).toList()
+
+			if (results.size > pageSize)
+				response.appendLine("Available currencies (page ${page + 1}):")
+			else if (results.isEmpty())
+				response.appendLine("No currencies found.")
+			else
+				response.appendLine("Available currencies:")
+
+			results.asSequence()
+				.drop(page * pageSize)
+				.take(pageSize)
+				.forEach { ref ->
+					val currency = ref.read() ?: return@forEach
+
+					response.appendLine(" • ${currency.symbol} - ${currency.name}")
+				}
+
+			val markup = InlineKeyboardMarkup(
+				listOf(
+					buildList {
+						if (page > 0) {
+							add(InlineKeyboardButton("←", callbackData = "page-"))
+						}
+
+						if (results.size > (page + 1) * pageSize) {
+							add(InlineKeyboardButton("→", callbackData = "page+"))
+						}
+					}
+				)
+			)
+
+			return response.toString() to markup
 		}
 
-		bot.sendMessage(
-			chat = msg.chat.id,
-			reply = ReplyParameters(msg.id, ReplyParameters.ChatIdentifier.Id(msg.chat.id)),
-			text = response.toString(),
+		val (response, markup) = generate()
+
+		val reply = msg.reply(
+			text = response,
+			replyMarkup = markup,
+		)
+
+		selectUntilStopped {
+			timeout(5.minutes) {
+				stop()
+			}
+
+			reply.callbackQuery("page-") {
+				if (page > 0)
+					page--
+
+				val (response, markup) = generate()
+				reply.edit(
+					text = response,
+					replyMarkup = markup,
+				)
+			}
+
+			reply.callbackQuery("page+") {
+				page++
+
+				val (response, markup) = generate()
+				reply.edit(
+					text = response,
+					replyMarkup = markup,
+				)
+			}
+		}
+
+		// Delete the keyboard
+		reply.edit(
+			text = generate().first,
 		)
 	}
 
