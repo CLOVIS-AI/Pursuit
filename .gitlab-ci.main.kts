@@ -125,7 +125,7 @@ gitlabCi {
 	val checkJvm by job(stage = test) {
 		jvm()
 
-		service("mongo", "8.2.5") {
+		service("mongo", "7.0.31") {
 			alias = "mongo"
 		}
 
