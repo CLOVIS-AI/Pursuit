@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import opensavvy.prepared.suite.assertions.matches
+import opensavvy.pursuit.finance.Category
 import opensavvy.pursuit.finance.Currency
 import opensavvy.pursuit.finance.Transaction
 import opensavvy.pursuit.users.User
@@ -40,6 +41,7 @@ class FakeTransactionService : Transaction.Service {
 		label: String,
 		from: Transaction.Amount?,
 		into: Transaction.Amount,
+		category: Category.Ref?,
 	): Transaction.Ref = lock.withLock("create($at, $label, $from, $into)") {
 		val user = currentUser()
 
@@ -49,7 +51,7 @@ class FakeTransactionService : Transaction.Service {
 		checkNotNull(into.currency.read()) { "Could not access the 'into' currency: ${into.currency}" }
 
 		val newId = (transactionsById.keys.maxOrNull() ?: 0) + 1
-		val newTransaction = Transaction(at, label, from, into)
+		val newTransaction = Transaction(at, label, from, into, category)
 
 		transactionsById[newId] = newTransaction
 		creatorsByTransactionId[newId] = user
@@ -113,25 +115,37 @@ class FakeTransactionService : Transaction.Service {
 	): Transaction.Amount = lock.withLock("total($currency, $start, $end)") {
 		val user = currentUser()
 
-		val result = transactionsById
+		val transactions = transactionsById
 			.asSequence()
 			.filter { (id, _) -> creatorsByTransactionId[id] == user }
 			.map { (_, it) -> it }
 			.filter { start == null || it.at >= start }
 			.filter { end == null || it.at <= end }
-			.sumOf {
-				val fromAmount = if (it.from != null && it.from!!.currency == currency)
-					-it.from!!.amount
-				else 0
 
-				val intoAmount = if (it.into.currency == currency)
-					it.into.amount
-				else 0
+		totalOf(currency, transactions)
+	}
 
-				fromAmount + intoAmount
-			}
+	private fun Transaction.delta(currency: Currency.Ref): Long {
+		val fromAmount = if (from != null && from!!.currency == currency)
+			-from!!.amount
+		else 0
 
-		Transaction.Amount(result, currency)
+		val intoAmount = if (into.currency == currency)
+			into.amount
+		else 0
+
+		return fromAmount + intoAmount
+	}
+
+	fun totalOf(
+		currency: Currency.Ref,
+		transactions: Sequence<Transaction>,
+	): Transaction.Amount {
+		println("Sum of:")
+		return transactions
+			.sumOf { it.delta(currency) }
+			.let { Transaction.Amount(it, currency) }
+			.also { println(" = $it") }
 	}
 
 	private data class FakeTransactionRef(
@@ -164,6 +178,28 @@ class FakeTransactionService : Transaction.Service {
 				label = label ?: existing.label,
 				from = from ?: existing.from,
 				into = into ?: existing.into,
+			)
+		}
+
+		override suspend fun categorize(category: Category.Ref) = service.lock.withLock("categorize($category)") {
+			val user = currentUser()
+
+			check(service.creatorsByTransactionId[id] == user) { "You are not allowed to modify this transaction" }
+			val existing = service.transactionsById[id]!!
+
+			service.transactionsById[id] = existing.copy(
+				category = category,
+			)
+		}
+
+		override suspend fun decategorize() = service.lock.withLock("decategorize()") {
+			val user = currentUser()
+
+			check(service.creatorsByTransactionId[id] == user) { "You are not allowed to modify this transaction" }
+			val existing = service.transactionsById[id]!!
+
+			service.transactionsById[id] = existing.copy(
+				category = null,
 			)
 		}
 

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import opensavvy.ktmongo.bson.types.ObjectId
 import opensavvy.ktmongo.coroutines.MongoCollection
+import opensavvy.pursuit.finance.Category
 import opensavvy.pursuit.finance.Currency
 import opensavvy.pursuit.finance.Transaction
 import kotlin.time.Instant
@@ -36,7 +37,7 @@ internal data class MongoTransaction(
 internal class MongoTransactionService(
 	private val collection: MongoCollection<MongoTransaction>,
 ) : Transaction.Service {
-	override suspend fun create(at: Instant, label: String, from: Transaction.Amount?, into: Transaction.Amount): Transaction.Ref {
+	override suspend fun create(at: Instant, label: String, from: Transaction.Amount?, into: Transaction.Amount, category: Category.Ref?): Transaction.Ref {
 		TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/14")
 	}
 
@@ -60,6 +61,14 @@ internal class MongoTransactionService(
 		}
 
 		override suspend fun delete() {
+			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/14")
+		}
+
+		override suspend fun categorize(category: Category.Ref) {
+			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/14")
+		}
+
+		override suspend fun decategorize() {
 			TODO("Will be implemented in https://gitlab.com/opensavvy/pursuit/-/work_items/14")
 		}
 

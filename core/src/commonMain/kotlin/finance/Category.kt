@@ -68,9 +68,18 @@ data class Category(
 		 *
 		 * A user could assign spending in different currencies for a single category,
 		 * so there may be multiple results.
+		 *
+		 * This list may be empty if this total is returned as part of a filter that filtered
+		 * out all transactions for this category.
 		 */
 		val totals: List<Transaction.Amount>,
-	)
+	) {
+
+		constructor(
+			category: Ref,
+			vararg totals: Transaction.Amount,
+		) : this(category, totals.asList())
+	}
 
 	interface Service : BaseService<Category> {
 
@@ -86,7 +95,7 @@ data class Category(
 		suspend fun create(
 			label: String,
 			description: String? = null,
-			parent: Category? = null,
+			parent: Ref? = null,
 		): Ref
 
 		/**
@@ -114,6 +123,13 @@ data class Category(
 		 *
 		 * Parameters that are `null` have no effect.
 		 *
+		 * If a currency contains no transactions matching the filters,
+		 * it is not returned in the [totals][CategoryTotal.totals].
+		 *
+		 * If a category doesn't have any transactions matching the filters for a given
+		 * currency, that currency is not included in its totals. Other currencies are
+		 * still included.
+		 *
 		 * ### Authorization
 		 *
 		 * Users can total transactions they have created.
@@ -121,6 +137,7 @@ data class Category(
 		suspend fun totals(
 			start: Instant? = null,
 			end: Instant? = null,
+			currency: Ref? = null,
 		): List<CategoryTotal>
 
 	}
@@ -140,7 +157,7 @@ data class Category(
 		suspend fun edit(
 			label: String? = null,
 			description: String? = null,
-			parent: Category? = null,
+			parent: Ref? = null,
 		)
 
 		/**
@@ -166,10 +183,17 @@ data class Category(
 		 */
 		suspend fun children(
 			includeIndirect: Boolean = true,
-		): List<Ref>
+		): Set<Ref>
 
 		/**
 		 * Computes the total of all transactions in this category.
+		 *
+		 * If a child category contains no transactions matching the filters,
+		 * it is returned with no [totals][CategoryTotal.totals].
+		 *
+		 * If a child category contains no transactions for a given currency,
+		 * the currency is not returned in the [totals][CategoryTotal.totals], but
+		 * the category's other currencies are still returned.
 		 *
 		 * ### Authorization
 		 *
@@ -178,10 +202,14 @@ data class Category(
 		suspend fun total(
 			start: Instant? = null,
 			end: Instant? = null,
+			includeIndirect: Boolean = true,
 		): CategoryTotal
 
 		/**
 		 * Computes the total of all transactions in this category that were made in the specified [currency].
+		 *
+		 * If the category contains no transactions matching the filters in the specified [currency],
+		 * this method returns 0.
 		 *
 		 * ### Authorization
 		 *
@@ -191,6 +219,7 @@ data class Category(
 			currency: Currency.Ref,
 			start: Instant? = null,
 			end: Instant? = null,
+			includeIndirect: Boolean = true,
 		): Transaction.Amount {
 			val totals = total(start, end).totals
 			val total = totals.find { it.currency == currency }

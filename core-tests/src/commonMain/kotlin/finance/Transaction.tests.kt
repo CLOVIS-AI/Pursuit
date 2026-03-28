@@ -26,6 +26,7 @@ import opensavvy.prepared.suite.*
 import opensavvy.prepared.suite.assertions.checkThrows
 import opensavvy.prepared.suite.random.nextLong
 import opensavvy.prepared.suite.random.random
+import opensavvy.pursuit.finance.Category
 import opensavvy.pursuit.finance.Currency
 import opensavvy.pursuit.finance.Transaction
 import opensavvy.pursuit.finance.Transaction.Amount
@@ -41,6 +42,7 @@ fun SuiteDsl.verifyTransactionService(
 	users: Prepared<User.Service>,
 	currencies: Prepared<Currency.Service>,
 	transactions: Prepared<Transaction.Service>,
+	categories: Prepared<Category.Service>,
 ) = suite("Transactions") {
 
 	val userA by users.testUser(name = "Alice")
@@ -57,7 +59,8 @@ fun SuiteDsl.verifyTransactionService(
 					at = time.now,
 					label = "Test",
 					from = null,
-					into = Amount(20, currencyA1())
+					into = Amount(20, currencyA1()),
+					category = null,
 				)
 			}
 		}
@@ -86,7 +89,8 @@ fun SuiteDsl.verifyTransactionService(
 					at = time.now,
 					label = "Test",
 					from = null,
-					into = Amount(20, currencyA1())
+					into = Amount(20, currencyA1()),
+					category = null,
 				)
 
 				check(transaction.read()?.at == time.now)
@@ -235,6 +239,49 @@ fun SuiteDsl.verifyTransactionService(
 				transaction.edit(into = Amount(15, currencyA2()))
 
 				check(transaction.read()?.into == Amount(15, currencyA2()))
+			}
+		}
+
+		val categoryA1 by categories.testCategory(userA)
+		val categoryA2 by categories.testCategory(userA)
+
+		test("A user can change the category of a transaction as often as they want") {
+			executeAs(userA) {
+				val transaction = transactions().create(
+					at = time.now,
+					label = "Test",
+					from = Amount(10, currencyA2()),
+					into = Amount(20, currencyA1()),
+					category = categoryA1(),
+				)
+
+				check(transaction.read()?.category == categoryA1())
+
+				transaction.categorize(categoryA2())
+
+				check(transaction.read()?.category == categoryA2())
+
+				transaction.categorize(categoryA1())
+
+				check(transaction.read()?.category == categoryA1())
+			}
+		}
+
+		test("A user can remove the category of a transaction") {
+			executeAs(userA) {
+				val transaction = transactions().create(
+					at = time.now,
+					label = "Test",
+					from = Amount(10, currencyA2()),
+					into = Amount(20, currencyA1()),
+					category = categoryA1(),
+				)
+
+				check(transaction.read()?.category == categoryA1())
+
+				transaction.decategorize()
+
+				check(transaction.read()?.category == null)
 			}
 		}
 

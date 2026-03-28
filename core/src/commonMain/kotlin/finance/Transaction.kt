@@ -119,6 +119,7 @@ data class Transaction(
 			label: String,
 			from: Amount?,
 			into: Amount,
+			category: Category.Ref? = null,
 		): Ref
 
 		/**
