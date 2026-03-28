@@ -36,12 +36,12 @@ suspend fun startTelegramBot(
 	val currencies = services.service<Currency.Service>().first()
 
 	bot.poll {
-		command("/start", description = "Start the bot and log in") {
-			val from = it.from ?: return@command
+		command("/start", description = "Start the bot and log in") { msg ->
+			val from = msg.from ?: return@command
 			val username = from.username
 
 			if (username == null) {
-				bot.sendMessage(it.chat.id, "Welcome to the Pursuit bot! \n\nTo continue using this bot, please configure a username in your Telegram settings.")
+				msg.reply("Welcome to the Pursuit bot!\n\nTo continue using this bot, please configure a username in your Telegram settings.")
 				return@command
 			}
 
@@ -53,18 +53,15 @@ suspend fun startTelegramBot(
 				)
 			} catch (e: Exception) {
 				System.err.println("Error logging in user $username: $e")
-				bot.sendMessage(it.chat.id, "Could not log you in. Please try again later.")
+				msg.reply("Could not log you in. Please try again later.")
 				return@command
 			}.read() ?: return@command
 
-			bot.sendMessage(it.chat.id, "Welcome, ${user.fullName}!\n\nYou are logged in to Pursuit. Pursuit is a new personal and financial tracker, to help you pursue your life goals. \n\nStay tuned for updates!")
+			msg.reply("Welcome, ${user.fullName}!\n\nYou are logged in to Pursuit. Pursuit is a new personal and financial tracker, to help you pursue your life goals. \n\nStay tuned for updates!")
 		}
 
 		users.authCommand("/hello", description = "Test whether you are authenticated") {
-			bot.sendMessage(
-				it.chat.id,
-				"Hello, ${currentUser().read()?.fullName}!"
-			)
+			it.reply("Hello, ${currentUser().read()?.fullName}!")
 		}
 
 		currencyCommands(bot, users, currencies)
