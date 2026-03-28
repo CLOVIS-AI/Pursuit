@@ -22,6 +22,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import opensavvy.prepared.suite.*
 import opensavvy.prepared.suite.random.nextInt
 import opensavvy.prepared.suite.random.random
+import opensavvy.pursuit.finance.Category
 import opensavvy.pursuit.finance.Currency
 import opensavvy.pursuit.finance.Transaction
 import opensavvy.pursuit.finance.Transaction.Amount
@@ -40,12 +41,14 @@ internal suspend fun Transaction.Service.testTransaction(
 	label: String? = null,
 	from: Amount? = null,
 	into: Amount,
+	category: Category.Ref? = null,
 ): Transaction.Ref = executeAs(owner) {
 	this.create(
 		at = at ?: test.time.now,
 		label = label ?: "Test Transaction ${test.random.nextInt()}",
 		from = from,
 		into = into,
+		category = category,
 	)
 }
 
@@ -58,8 +61,9 @@ fun Prepared<Transaction.Service>.testTransaction(
 	label: String? = null,
 	from: Amount? = null,
 	into: Amount,
+	category: Prepared<Category.Ref>? = null,
 ): PreparedProvider<Transaction.Ref> = prepared {
-	this@testTransaction().testTransaction(owner(), at, label, from, into)
+	this@testTransaction().testTransaction(owner(), at, label, from, into, category?.invoke())
 }
 
 /**
@@ -72,6 +76,7 @@ fun Prepared<Transaction.Service>.testTransaction(
 	at: Instant? = null,
 	label: String? = null,
 	from: Amount? = null,
+	category: Prepared<Category.Ref>? = null,
 ): PreparedProvider<Transaction.Ref> = prepared {
-	this@testTransaction().testTransaction(owner(), at, label, from, Amount(amount, currency()))
+	this@testTransaction().testTransaction(owner(), at, label, from, Amount(amount, currency()), category?.invoke())
 }

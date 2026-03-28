@@ -65,6 +65,14 @@ data class Transaction(
 	 * An amount that was **received** during this transaction, by the current user.
 	 */
 	val into: Amount,
+	/**
+	 * The category that this transaction was [categorized][Ref.categorize] as.
+	 *
+	 * If `null`, the user has not yet categorized this transaction.
+	 *
+	 * Note that categories are personal. Each user sees different categories.
+	 */
+	val category: Category.Ref?,
 ) : BaseEntity {
 
 	/**
@@ -111,6 +119,7 @@ data class Transaction(
 			label: String,
 			from: Amount?,
 			into: Amount,
+			category: Category.Ref? = null,
 		): Ref
 
 		/**
@@ -198,6 +207,27 @@ data class Transaction(
 			from: Amount? = null,
 			into: Amount? = null,
 		)
+
+		/**
+		 * Sets the category of this transaction for the current user.
+		 *
+		 * ### Authorization
+		 *
+		 * The user who created the transaction is the only one who can modify it.
+		 * They must also have created the [category].
+		 *
+		 * @see decategorize
+		 */
+		suspend fun categorize(category: Category.Ref)
+
+		/**
+		 * Unsets the category of this transaction for the current user.
+		 *
+		 * ### Authorization
+		 *
+		 * The user who created the transaction is the only one who can modify it.
+		 */
+		suspend fun decategorize()
 
 		suspend fun delete()
 
