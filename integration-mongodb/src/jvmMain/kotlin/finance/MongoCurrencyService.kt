@@ -50,7 +50,7 @@ internal class MongoCurrencyService(
 	): Currency.Ref {
 		val user = currentMongoUser()
 
-		val newId = collection.context.newId()
+		val newId = collection.newId()
 
 		collection.insertOne(
 			MongoCurrency(
@@ -84,8 +84,6 @@ internal class MongoCurrencyService(
 			}
 		)
 
-		// TODO after https://gitlab.com/opensavvy/ktmongo/-/merge_requests/197:
-		//    merge the 'find' and the 'updateOne' into a single atomic operation
 		val created = collection.findOne {
 			MongoCurrency::name eq name
 			MongoCurrency::owner eq null
@@ -136,15 +134,7 @@ internal class MongoCurrencyService(
 		) {
 			val user = currentMongoUser()
 
-			// TODO after https://gitlab.com/opensavvy/ktmongo/-/merge_requests/197:
-			//    merge the 'find' and the 'updateOne' into a single atomic operation
-			val exists = collection.findOne {
-				MongoCurrency::_id eq id
-				MongoCurrency::owner eq user.id
-			}
-			checkNotNull(exists) { "Cannot modify a currency $id that does not exist, or that does not belong to the logged-in user" }
-
-			collection.updateOne(
+			val result = collection.updateOne(
 				filter = {
 					MongoCurrency::_id eq id
 					MongoCurrency::owner eq user.id
@@ -163,6 +153,8 @@ internal class MongoCurrencyService(
 						MongoCurrency::nToB set numberToBasic
 				}
 			)
+
+			check(result.matchedCount == 1L) { "Cannot modify a currency $id that does not exist, or that does not belong to the logged-in user" }
 		}
 
 		override suspend fun read(): Currency? {
