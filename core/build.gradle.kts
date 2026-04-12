@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2026, OpenSavvy and contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 @file:OptIn(ExperimentalWasmDsl::class)
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -16,16 +32,12 @@ kotlin {
 	}
 	linuxX64()
 	linuxArm64()
-	macosX64()
 	macosArm64()
 	iosArm64()
-	iosX64()
 	iosSimulatorArm64()
-	watchosX64()
 	watchosArm32()
 	watchosArm64()
 	watchosSimulatorArm64()
-	tvosX64()
 	tvosArm64()
 	tvosSimulatorArm64()
 	mingwX64()
