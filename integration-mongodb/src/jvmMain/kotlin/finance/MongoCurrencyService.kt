@@ -120,6 +120,16 @@ internal class MongoCurrencyService(
 		emitAll(search.asFlow().map { MongoCurrencyRef(it._id, canEdit = it.owner == null || it.owner == user.id) })
 	}
 
+	/**
+	 * Internal, system function. Does not verify access rights.
+	 */
+	internal suspend fun refById(id: ObjectId): MongoCurrencyRef {
+		val user = currentMongoUser()
+		val currency = collection.findOne { MongoCurrency::_id eq id }
+		checkNotNull(currency) { "Currency with ID $id not found" }
+		return MongoCurrencyRef(id, canEdit = currency.owner == null || currency.owner == user.id)
+	}
+
 	inner class MongoCurrencyRef(
 		val id: ObjectId,
 		override val canEdit: Boolean,

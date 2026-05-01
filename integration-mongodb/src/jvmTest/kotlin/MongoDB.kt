@@ -20,11 +20,11 @@ import kotlinx.serialization.Serializable
 import opensavvy.prepared.runner.testballoon.preparedSuite
 import opensavvy.prepared.suite.config.CoroutineTimeout
 import opensavvy.prepared.suite.prepared
-import opensavvy.pursuit.integration.mongodb.finance.MongoCurrency
-import opensavvy.pursuit.integration.mongodb.finance.MongoCurrencyService
+import opensavvy.pursuit.integration.mongodb.finance.*
 import opensavvy.pursuit.integration.mongodb.users.MongoUser
 import opensavvy.pursuit.integration.mongodb.users.MongoUserService
 import opensavvy.pursuit.tests.finance.verifyCurrencyService
+import opensavvy.pursuit.tests.finance.verifyTransactionService
 import opensavvy.pursuit.tests.users.verifyUserService
 import kotlin.time.Duration.Companion.minutes
 
@@ -47,6 +47,7 @@ val MongoDB by preparedSuite {
 
 	val usersCollection by testCollection<MongoUser>("users")
 	val currenciesCollection by testCollection<MongoCurrency>("currencies")
+	val transactionsCollection by testCollection<MongoTransaction>("transactions")
 
 	val users by prepared {
 		MongoUserService(usersCollection())
@@ -56,6 +57,15 @@ val MongoDB by preparedSuite {
 		MongoCurrencyService(currenciesCollection())
 	}
 
+	val transactions by prepared {
+		MongoTransactionService(transactionsCollection(), currencies())
+	}
+
+	val categories by prepared {
+		MongoCategoryService()
+	}
+
 	verifyUserService(users)
 	verifyCurrencyService(users, currencies)
+	verifyTransactionService(users, currencies, transactions, categories)
 }
