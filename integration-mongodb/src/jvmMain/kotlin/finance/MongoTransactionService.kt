@@ -199,15 +199,7 @@ internal class MongoTransactionService(
 		) {
 			val user = currentMongoUser()
 
-			// TODO after https://gitlab.com/opensavvy/ktmongo/-/merge_requests/197:
-			//    merge the 'find' and the 'updateOne' into a single atomic operation
-			val exists = collection.findOne {
-				MongoTransaction::_id eq id
-				MongoTransaction::owner eq user.id
-			}
-			checkNotNull(exists) { "Transaction with ID $id not found or not owned by user" }
-
-			collection.updateOne(
+			val result = collection.updateOne(
 				filter = {
 					MongoTransaction::_id eq id
 					MongoTransaction::owner eq user.id
@@ -230,6 +222,8 @@ internal class MongoTransactionService(
 					}
 				}
 			)
+
+			check(result.modifiedCount == 1L) { "Transaction with ID $id not found or not owned by user" }
 		}
 
 		override suspend fun delete() {
