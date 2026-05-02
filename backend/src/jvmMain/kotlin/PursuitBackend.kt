@@ -27,7 +27,7 @@ import opensavvy.pursuit.input.telegram.startTelegramBot
 import opensavvy.pursuit.integration.mongodb.PursuitMongoDB
 
 fun main(): Unit = runBlocking(Dispatchers.Default) {
-	val mongoClient = MongoClient.create()
+	val mongoClient = MongoClient.create(System.getenv("mongodb_uri") ?: "mongodb://localhost:27017")
 	val database = mongoClient.getDatabase("pursuit-data")
 
 	val services = ServiceContainer(
