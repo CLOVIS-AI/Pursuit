@@ -101,7 +101,17 @@ data class Transaction(
 		 * The currency this [amount] is a value of.
 		 */
 		val currency: Currency.Ref,
-	)
+	) {
+
+		constructor(
+			amount: Double,
+			currency: Currency,
+			currencyRef: Currency.Ref,
+		) : this((amount * currency.numberToBasic).toLong(), currencyRef)
+
+		fun toShortString(currency: Currency) =
+			"${amount.toDouble() / currency.numberToBasic} ${currency.symbol}"
+	}
 
 	interface Service : BaseService<Transaction> {
 
