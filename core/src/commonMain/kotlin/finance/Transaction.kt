@@ -111,6 +111,9 @@ data class Transaction(
 
 		fun toShortString(currency: Currency) =
 			"${amount.toDouble() / currency.numberToBasic} ${currency.symbol}"
+
+		suspend fun toShortString() =
+			toShortString(currency.read()!!)
 	}
 
 	interface Service : BaseService<Transaction> {

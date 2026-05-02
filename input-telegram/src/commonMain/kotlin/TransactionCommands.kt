@@ -27,6 +27,7 @@ import opensavvy.telegram.entity.InlineKeyboardButton
 import opensavvy.telegram.entity.InlineKeyboardMarkup
 import opensavvy.telegram.sdk.BotRouter
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 
 fun BotRouter.Builder.transactionCommands(
 	users: User.Service,
@@ -120,6 +121,36 @@ fun BotRouter.Builder.transactionCommands(
 			category = null,
 		)
 
-		msg.reply("New transaction created!")
+		msg.reply("New transaction created! Use /monthly to see your recent transactions.")
+	}
+
+	users.authCommand("/monthly", "List transactions from the last 31 days") { msg ->
+		val now = Clock.System.now()
+
+		val result = buildString {
+			appendLine("Recent transactions:")
+			appendLine()
+
+			transactions.search(
+				start = now - 31.days,
+				end = now,
+				mostRecentFirst = false,
+			).collect {
+				val transaction = it.read()!!
+
+				appendLine("${transaction.at} • ${transaction.into.toShortString()} • ${transaction.label}")
+			}
+
+			appendLine()
+			appendLine("Total:")
+			transactions.totals(
+				start = now - 31.days,
+				end = now,
+			).forEach {
+				appendLine(" • ${it.toShortString()}")
+			}
+		}
+
+		msg.reply(result)
 	}
 }
