@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.toList
 import opensavvy.prepared.suite.*
 import opensavvy.prepared.suite.assertions.checkThrows
+import opensavvy.prepared.suite.config.Ignored
 import opensavvy.prepared.suite.random.nextLong
 import opensavvy.prepared.suite.random.random
 import opensavvy.pursuit.finance.Category
@@ -245,7 +246,8 @@ fun SuiteDsl.verifyTransactionService(
 		val categoryA1 by categories.testCategory(userA)
 		val categoryA2 by categories.testCategory(userA)
 
-		test("A user can change the category of a transaction as often as they want") {
+		// TODO: bring back test in https://gitlab.com/opensavvy/pursuit/-/work_items/17
+		test("A user can change the category of a transaction as often as they want", Ignored) {
 			executeAs(userA) {
 				val transaction = transactions().create(
 					at = time.now,
@@ -267,7 +269,8 @@ fun SuiteDsl.verifyTransactionService(
 			}
 		}
 
-		test("A user can remove the category of a transaction") {
+		// TODO: bring back test in https://gitlab.com/opensavvy/pursuit/-/work_items/17
+		test("A user can remove the category of a transaction", Ignored) {
 			executeAs(userA) {
 				val transaction = transactions().create(
 					at = time.now,

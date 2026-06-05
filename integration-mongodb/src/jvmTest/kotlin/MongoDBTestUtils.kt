@@ -60,7 +60,7 @@ val testId by randomInt(0, Int.MAX_VALUE)
  * - If the test failed, the collection is dumped to the standard output.
  */
 inline fun <reified Document : Any> testCollection(name: String): PreparedProvider<MongoCollection<Document>> = prepared {
-	val name = "test-${testId()}-$name"
+	val name = "test_${testId()}_$name"
 
 	val collection = testDatabase().getCollection<Document>(name)
 		.asKtMongo()
