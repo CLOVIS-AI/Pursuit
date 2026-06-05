@@ -14,10 +14,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:OptIn(ExperimentalWasmDsl::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-
 plugins {
 	alias(opensavvyConventions.plugins.base)
 	alias(opensavvyConventions.plugins.kotlin.library)
@@ -26,10 +22,6 @@ plugins {
 
 kotlin {
 	jvm()
-
-	sourceSets.all {
-		languageSettings.enableLanguageFeature("ContextParameters")
-	}
 
 	sourceSets.jvmMain.dependencies {
 		api(projects.core)
