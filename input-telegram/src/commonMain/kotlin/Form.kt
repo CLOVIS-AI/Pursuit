@@ -26,29 +26,100 @@ class Form(
 	private val name: String,
 ) {
 
-	private val fields = ArrayList<FieldImpl>()
-	private val values = HashMap<FieldImpl, String>()
+	private val fields = ArrayList<Field>()
+	private val values = HashMap<Field, Any?>()
 
-	interface Field {
-		fun read(): String?
-	}
-
-	private inner class FieldImpl(
+	private data class Field(
 		val name: String,
-		val question: String,
-		val predicate: (String) -> Boolean,
-	) : Field {
+	)
 
-		override fun read(): String? =
-			values[this]
+	private lateinit var message: Message
+
+	context(context: BotRouter.HandlerContext)
+	suspend fun start(replyTo: Message) = with(context) {
+		check(!::message.isInitialized) { "Cannot start a form multiple times: \"$name\"" }
+		message = replyTo.reply("$name\n\nLoading…")
 	}
 
-	fun field(
+	context(context: BotRouter.HandlerContext)
+	suspend fun end(): Unit = with(context) {
+		message.edit(generateText())
+	}
+
+	fun <T> acceptValue(
+		name: String,
+		value: T,
+	) {
+		val field = Field(name)
+		fields += field
+		values[field] = value
+	}
+
+	@JvmName("fieldString")
+	context(context: BotRouter.HandlerContext)
+	suspend fun field(
 		name: String,
 		question: String,
-		predicate: (String) -> Boolean = { true },
-	): Field = FieldImpl(name, question, predicate)
-		.also { fields += it }
+		validate: suspend (String) -> Boolean = { true },
+	): String? =
+		field(name, question, validate, convert = { it })
+
+	context(context: BotRouter.HandlerContext)
+	suspend fun <T> field(
+		name: String,
+		question: String,
+		validate: suspend (String) -> Boolean = { true },
+		convert: suspend (String) -> T,
+	): T? = with(context) {
+		val field = Field(name)
+		fields += field
+
+		fun keyboard() = InlineKeyboardMarkup(
+			InlineKeyboardButton("Stop", callbackData = "stop")
+		)
+
+		message.edit(
+			text = generateText() + "\n" + question + "\n(reply to this message)",
+			replyMarkup = keyboard()
+		)
+
+		var result: T? = null
+		selectUntilStopped {
+			timeout(5.minutes) {
+				stop()
+			}
+
+			message.callbackQuery("stop") {
+				stop()
+			}
+
+			suspend fun reactTo(newMessage: Message) {
+				val text = newMessage.text ?: return
+
+				if (validate(text)) {
+					val value = convert(text)
+					values[field] = value
+					result = value
+					stop()
+				} else {
+					message.edit(
+						text = generateText() + "\n" + question + "\n(invalid answer; reply to this message)",
+						replyMarkup = keyboard(),
+					)
+				}
+			}
+
+			message.reply {
+				reactTo(it)
+			}
+
+			update({ it.message != null && it.message?.from?.id == message.from?.id }) {
+				reactTo(it.message!!)
+			}
+		}
+
+		result
+	}
 
 	private fun generateText() = buildString {
 		appendLine(name)
@@ -63,62 +134,5 @@ class Form(
 				appendLine(value)
 			}
 		}
-	}
-
-	private fun chooseNextField(): FieldImpl? = fields
-		.firstOrNull { it !in values }
-
-	context(context: BotRouter.HandlerContext)
-	suspend fun executeAsReplyTo(message: Message): Unit = with(context) {
-		var nextField = chooseNextField() ?: error("This form contains no fields")
-
-		fun keyboard() = InlineKeyboardMarkup(
-			InlineKeyboardButton("Stop", callbackData = "stop")
-		)
-
-		val announce = message.reply(
-			text = generateText() + "\n" + nextField.question + "\n(reply to this message)",
-			replyMarkup = keyboard(),
-		)
-
-		selectUntilStopped {
-			timeout(5.minutes) {
-				stop()
-			}
-
-			announce.callbackQuery("stop") {
-				stop()
-			}
-
-			suspend fun reactTo(newMessage: Message) {
-				val text = newMessage.text ?: return
-
-				if (nextField.predicate(text)) {
-					values[nextField] = text
-					nextField = chooseNextField() ?: stop()
-					announce.edit(
-						text = generateText() + "\n" + nextField.question + "\n(reply to this message)",
-						replyMarkup = keyboard(),
-					)
-				} else {
-					announce.edit(
-						text = generateText() + "\n" + nextField.question + "\n(invalid answer; reply to this message)",
-						replyMarkup = keyboard(),
-					)
-				}
-			}
-
-			announce.reply {
-				reactTo(it)
-			}
-
-			update({ it.message != null && it.message?.from?.id == message.from?.id }) {
-				reactTo(it.message!!)
-			}
-		}
-
-		announce.edit(
-			text = generateText()
-		)
 	}
 }

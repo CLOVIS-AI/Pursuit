@@ -119,6 +119,8 @@ fun BotRouter.Builder.currencyCommands(
 			name = "Creating a new currency…",
 		)
 
+		form.start(replyTo = msg)
+
 		val name = form.field(
 			name = "Name",
 			question = "What should be the name of the new currency?",
@@ -127,13 +129,14 @@ fun BotRouter.Builder.currencyCommands(
 		val symbol = form.field(
 			name = "Symbol",
 			question = "What should be the symbol of the new currency?",
-			predicate = { it.length <= 3 },
+			validate = { it.length <= 3 },
 		)
 
-		val numberToBasic = form.field(
+		val numberToBasic: Int? = form.field(
 			name = "How many of the smallest division in one unit",
 			question = "How many of the smallest division in one unit?",
-			predicate = { it.toIntOrNull() != null },
+			validate = { it.toIntOrNull() != null },
+			convert = { it.toInt() }
 		)
 
 		val description = form.field(
@@ -141,13 +144,13 @@ fun BotRouter.Builder.currencyCommands(
 			question = "What should be the description of the new currency?",
 		)
 
-		form.executeAsReplyTo(msg)
+		form.end()
 
 		val currency = currencies.create(
-			name = name.read()!!,
-			symbol = symbol.read()!!,
-			numberToBasic = numberToBasic.read()!!.toInt(),
-			description = description.read(),
+			name = name!!,
+			symbol = symbol!!,
+			numberToBasic = numberToBasic!!,
+			description = description,
 		).read() ?: error("Currency creation failed")
 
 		msg.reply("Currency successfully created: ${currency.symbol} (${currency.name})")
