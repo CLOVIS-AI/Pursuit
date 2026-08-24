@@ -12,7 +12,7 @@ import opensavvy.gitlab.ci.script.shell
 /**
  * [OpenSavvy's CI container images](https://gitlab.com/opensavvy/automation/containers/-/releases)
  */
-val ciContainers = "0.8.7"
+val ciContainers = "0.8.10"
 
 /**
  * The URL of the website built by /docs/website.
