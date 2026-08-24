@@ -84,6 +84,7 @@ fun Job.nativeIosArm64() {
 	beforeScript {
 		shell("xcodebuild -downloadPlatform iOS")
 		shell("xcodebuild -downloadPlatform watchOS")
+		shell("xcodebuild -downloadPlatform tvOS")
 	}
 
 	tag("saas-macos-medium-m1")
